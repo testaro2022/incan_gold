@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:incan_gold/game.dart';
 import 'main.dart';
@@ -42,21 +44,24 @@ class _GamePageState extends State<GamePage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       //現在のラウンド表示
-                      Text("Round${_gameState.roundNumber}/$MAX_ROUND_NUM"),
+                      Text("Round${_gameState.roundNumber}/$MAX_ROUND_NUM"
+                          "diamondLeft:${_gameState.diamondsLeft},deck:${_gameState.cardsOnDeck.length}"),
                       //playerスコア
-                      for (int i = 0; i < PLAYERS_NUM; i++)
-                        // for (var _competitors in _gameState.competitors)
+                      for (var _competitors in _gameState.competitors)
                         SizedBox(
                             width: 100,
                             height: 90,
                             child: Card(
-                              color: Colors.yellow,
+                              color: (_gameState.competitorsInruins
+                                      .contains(_competitors))
+                                  ? Colors.yellow
+                                  : Colors.grey,
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Column(
                                     children: [
-                                      // Text("${_competitors.playerName}"),
+                                      Text("${_competitors.playerName}"),
                                       //拾ったダイヤ
                                       Row(
                                         mainAxisAlignment:
@@ -68,7 +73,7 @@ class _GamePageState extends State<GamePage> {
                                             child: Image.asset(
                                                 'images/icon_diamond.png'),
                                           ),
-                                          // Text("×${_competitors.diamonds}"),
+                                          Text("×${_competitors.diamonds}"),
                                         ],
                                       ),
                                       //キャンプに入れたダイヤ
@@ -82,7 +87,8 @@ class _GamePageState extends State<GamePage> {
                                             child: Image.asset(
                                                 'images/icon_tent.png'),
                                           ),
-                                          // Text("×${_competitors.diamondsIncamp}"),
+                                          Text(
+                                              "×${_competitors.diamondsIncamp}"),
                                         ],
                                       ),
                                       Row(
@@ -95,14 +101,15 @@ class _GamePageState extends State<GamePage> {
                                             child: Image.asset(
                                                 'images/icon_treasure.png'),
                                           ),
-                                          // Text("×${_competitors.treasureIncamp}"),
+                                          Text(
+                                              "×${_competitors.treasureIncamp}"),
                                         ],
                                       ),
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          // Text("score:${_competitors.score}"),
+                                          Text("score:${_competitors.score}"),
                                         ],
                                       ),
                                     ],
@@ -167,11 +174,21 @@ class _GamePageState extends State<GamePage> {
                       ),
                       //テキストメッセージ
                       Expanded(
-                        // flex: 2,
                         child: Container(
-                          child: Text(
-                              "テキストメッセージ\nRound${_gameState.roundNumber}:ターン${_gameState.turnNumber}\n遺跡を探検する？\nキャンプに戻る?"
-                              "${_gameState.cardsOnBoard}"),
+                          alignment: Alignment.centerLeft,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal, // 子ウィジェットのスクロール方向
+                            children: [
+                              // ListView(
+                              //    scrollDirection:
+                              //        Axis.horizontal, // 子ウィジェットのスクロール方向
+                              //    children: [
+                              //      for (var text in _gameState.textmessage)
+                              //        Text(text),
+                              //    ], // 子ウィジェット
+                              //  ),
+                            ], // 子ウィジェット
+                          ),
                           color: Color(0xFFD3DEF1),
                           height: 100.0,
                         ),
@@ -188,7 +205,9 @@ class _GamePageState extends State<GamePage> {
                         child: ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              _gameState.backToCamp();
+                              _gameState.AliceBackToCamp();
+                              _gameState.AIaction();
+                              _gameState.newTurn();
                             });
                           },
                           child: Text(
@@ -208,6 +227,7 @@ class _GamePageState extends State<GamePage> {
                         child: ElevatedButton(
                           onPressed: () {
                             setState(() {
+                              _gameState.AIaction();
                               _gameState.newTurn();
                             });
                           },
@@ -226,8 +246,8 @@ class _GamePageState extends State<GamePage> {
                 ],
               ),
               Visibility(
-                visible: _gameState.roundNumber == 5 &&
-                    _gameState.RoundOverFlag == true,
+                visible:
+                    _gameState.roundNumber == 5 && _gameState.RoundOverFlag,
                 child: Container(
                     color: Colors.grey.withOpacity(0.8),
                     width: double.infinity,

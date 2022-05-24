@@ -1,4 +1,4 @@
-import "dart:async";
+import 'dart:math';
 
 List<String> cardList = [
   //treasureが5枚,dangerが5種3枚ずつ,合計30枚
@@ -43,50 +43,44 @@ List<String> standbyCardList = [
   "diamond_11",
 ];
 
-enum Consequence {
-  campalone,
-  campwithfriends,
-  havetrouble,
-  undefine,
-}
-
 class GameState {
   List<String> cardsOnDeck = [];
   List<String> cardsOnBoard = [];
   List<String> cardsOnSide = [];
-  int diamonds = 0; //道中手に入れたダイヤ
-  // int treasures = 0; //手に入れた宝
   int diamondsLeft = 0; //道中残されたダイヤ
   int treasuresLeft = 0; //道中残された宝
-  int diamondsIncamp = 0; //持って帰ってダイヤ
-  int treasureIncamp = 0; //持って帰った宝
-  List<String> Troubles = [];
+  List<String> Troubles = []; //1つのラウンドで出た障害カード
   int roundNumber = 1;
   int turnNumber = 0;
-  Consequence? consequence;
   bool RoundOverFlag = false;
   bool troubleFlag = false;
   int score = 0;
   int playersNum = 3;
+  List<String> textmessage = [];
 
   Players Alice = Players("Alice");
   Players Bob = Players("Bob");
   Players Charlie = Players("Charlie");
-  List<Players> competitors = [];
+  List<Players> competitors = []; //playerのリスト
+  List<Players> competitorsInruins = []; //遺跡に残っているplayerのリスト
+  List<Players> camper = []; //1つのターンで一緒に帰るプレイヤーのリスト
 
   GameState() {
     this.cardsOnDeck = cardList.toList()..shuffle();
     this.cardsOnBoard = [];
     this.cardsOnSide = standbyCardList.toList()..shuffle();
-    List<Players> competitors = [Alice, Bob, Charlie];
+    this.competitors = [Alice, Bob, Charlie];
+    this.competitorsInruins = [Alice, Bob, Charlie];
   }
 
   void init() {
+    competitorsInruins = [Alice, Bob, Charlie];
+    camper = [];
     Troubles.clear();
-    diamondsLeft = 0; //道中残されたダイヤ
-    treasuresLeft = 0; //道中残された宝
+    diamondsLeft = 0; //道中残されたダイヤの初期化
+    treasuresLeft = 0; //道中残された宝の初期化
 
-    //道中手に入れたダイヤ
+    //道中手に入れたダイヤの初期化
     for (var _competitors in competitors) {
       _competitors.init();
     }
@@ -105,7 +99,37 @@ class GameState {
     _encounter(_temp);
   }
 
+  void AliceBackToCamp() {
+    camper.add(Alice);
+    competitorsInruins.remove(Alice);
+    if (competitorsInruins.isEmpty) {
+      RoundOverFlag = true;
+    }
+  }
+
+  void AIjudges() {
+    for (var who in competitorsInruins) {
+      if (who != Alice && who.decide() == "back") {
+        camper.add(who);
+        competitorsInruins.remove(who);
+      }
+    }
+  }
+
+  void AIaction() {
+    //AIが行くか退くか決める
+    AIjudges();
+    //campに変える人たちは帰る
+    backToCamp(camper);
+    //場所がおかしいけどとりあえずここで
+  }
+
   void newTurn() {
+    textmessage.add("Round$roundNumber:Turn$turnNumber\n");
+
+    if (competitorsInruins.isEmpty) {
+      RoundOverFlag = true;
+    }
     if (cardsOnDeck.length > 0) {
       var _temp = cardsOnDeck[0];
       //デッキの先頭を削除
@@ -115,17 +139,17 @@ class GameState {
       //めくれたカードにしたがって処理
       _encounter(_temp);
     }
-
     turnNumber++;
   }
 
   void _encounter(String card) async {
     if (card.contains("diamond")) {
       //"card_diamond_xx"の"card_diamond_"の部分を消して数字にする
-      diamondsLeft = int.parse(card.replaceFirst("diamond_", "")) % playersNum;
-      for (var _competitor in competitors) {
-        _competitor.diamonds =
-            int.parse(card.replaceFirst("diamond_", "")) ~/ playersNum;
+      diamondsLeft += int.parse(card.replaceFirst("diamond_", "")) %
+          competitorsInruins.length;
+      for (var _competitor in competitorsInruins) {
+        _competitor.diamonds += int.parse(card.replaceFirst("diamond_", "")) ~/
+            competitorsInruins.length;
       }
     } else if (card.contains("treasure")) {
       treasuresLeft += 1;
@@ -144,31 +168,37 @@ class GameState {
     }
   }
 
-  void backToCamp() {
+  void backToCamp(List<Players> camper) {
     //ダイヤをキャンプに入れscore計算
-    score += diamonds;
-    diamondsIncamp = diamonds;
-    diamonds = 0;
-
+    for (var who in camper) {
+      who.score += who.diamonds;
+      who.diamondsIncamp += who.diamonds;
+      who.diamonds = 0;
+      competitorsInruins.remove(who);
+    }
     // 宝をキャンプに入れる 宝は3枚目まで5点4枚目以降10点
     //もっとすっきり書きたい
-    for (var i = 0; i < treasuresLeft; i++) {
-      treasureIncamp++;
-      if (treasureIncamp > 3) {
-        score += 10;
-      } else {
-        score += 5;
+    if (camper.length == 1) {
+      for (var i = 0; i < treasuresLeft; i++) {
+        camper[0].treasureIncamp++;
+        if (camper[0].treasureIncamp > 3) {
+          camper[0].score += 10;
+        } else {
+          camper[0].score += 5;
+        }
+        cardsOnBoard.remove("treasure");
       }
-      cardsOnBoard.remove("treasure");
+      camper[0].score += diamondsLeft;
+      camper[0].diamondsIncamp += diamondsLeft;
+      diamondsLeft = 0;
     }
-    // treasures = 0;
-    RoundOverFlag = true;
+    camper.clear();
     //ほんとは余ったダイヤとかの処理する
   }
 
   void reroll() {
-    print(cardsOnBoard);
-    print(cardsOnDeck..sort());
+    // print(cardsOnBoard);
+    // print(cardsOnDeck..sort());
     //障害カードを抜いてサイドカードと入れ替え
     if (troubleFlag) {
       cardsOnBoard.removeAt(cardsOnBoard.length - 1);
@@ -199,5 +229,14 @@ class Players {
     diamonds = 0;
   }
 
-  void decide() {}
+  String decide() {
+    int _num = Random().nextInt(100);
+    int _goProbability = 50;
+    //80%の確率で
+    if (_num % (100 / (100 - _goProbability)) != 0) {
+      return "go";
+    } else {
+      return "back";
+    }
+  }
 }
