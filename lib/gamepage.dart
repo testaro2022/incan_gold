@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
 import 'package:incan_gold/game.dart';
 import 'main.dart';
@@ -44,8 +42,9 @@ class _GamePageState extends State<GamePage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       //現在のラウンド表示
-                      Text("Round${_gameState.roundNumber}/$MAX_ROUND_NUM"
-                          "diamondLeft:${_gameState.diamondsLeft},deck:${_gameState.cardsOnDeck.length}"),
+                      Text("Round${_gameState.roundNumber}/$MAX_ROUND_NUM\n"
+                          "diamondLeft:${_gameState.diamondsLeft},\n"
+                          "deck:${_gameState.cardsOnDeck.length}"),
                       //playerスコア
                       for (var _competitors in _gameState.competitors)
                         SizedBox(
@@ -131,8 +130,8 @@ class _GamePageState extends State<GamePage> {
                             child: Image.asset('images/card_deck.png'),
                           )),
                       //カード
-                      for (String _card in (_gameState.cardsOnBoard.length > 14)
-                          ? _gameState.cardsOnBoard.sublist(0, 13)
+                      for (String _card in (_gameState.cardsOnBoard.length > 13)
+                          ? _gameState.cardsOnBoard.sublist(0, 14)
                           : _gameState.cardsOnBoard)
                         SizedBox(
                             width: 45,
@@ -147,7 +146,7 @@ class _GamePageState extends State<GamePage> {
                     children: [
                       //カード
                       for (var _card in (_gameState.cardsOnBoard.length > 13)
-                          ? _gameState.cardsOnBoard.sublist(13)
+                          ? _gameState.cardsOnBoard.sublist(14)
                           : [])
                         SizedBox(
                             width: 45,
@@ -175,20 +174,26 @@ class _GamePageState extends State<GamePage> {
                       //テキストメッセージ
                       Expanded(
                         child: Container(
-                          alignment: Alignment.centerLeft,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal, // 子ウィジェットのスクロール方向
-                            children: [
-                              // ListView(
-                              //    scrollDirection:
-                              //        Axis.horizontal, // 子ウィジェットのスクロール方向
-                              //    children: [
-                              //      for (var text in _gameState.textmessage)
-                              //        Text(text),
-                              //    ], // 子ウィジェット
-                              //  ),
-                            ], // 子ウィジェット
+                          alignment: Alignment.center,
+                          child: SingleChildScrollView(
+                            child: Container(
+                              child: Column(
+                                children: [
+                                  for (var text
+                                      in _gameState.textmessage.reversed)
+                                    Text(text),
+                                  Text(
+                                      "===============GAME START==============="),
+                                ],
+                              ),
+                            ),
                           ),
+                          // child: Column(
+                          //   children: [
+                          //     for (var text in _gameState.textmessage)
+                          //       Text(text),
+                          //   ],
+                          // ),
                           color: Color(0xFFD3DEF1),
                           height: 100.0,
                         ),
@@ -231,9 +236,10 @@ class _GamePageState extends State<GamePage> {
                               _gameState.newTurn();
                             });
                           },
-                          child: Text(
-                            "遺跡を\n探検する",
-                          ),
+                          child: Text((_gameState.competitorsInruins
+                                  .contains(_gameState.Alice))
+                              ? "遺跡を\n探検する"
+                              : "次のターンへ"),
                         ),
                       ),
                       //余白

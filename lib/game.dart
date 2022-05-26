@@ -96,18 +96,18 @@ class GameState {
     cardsOnDeck.removeAt(0);
     //場札の末尾に追加
     cardsOnBoard.add(_temp);
+    tellNewCard(_temp);
+    textmessage.add("===============Round$roundNumber:Turn0===============");
     _encounter(_temp);
   }
 
   void AliceBackToCamp() {
     camper.add(Alice);
     competitorsInruins.remove(Alice);
-    if (competitorsInruins.isEmpty) {
-      RoundOverFlag = true;
-    }
   }
 
-  void AIjudges() {
+  void AIaction() {
+    //AIが行くか退くか決める
     for (var who in competitorsInruins) {
       if (who != Alice && who.decide() == "back") {
         camper.add(who);
@@ -116,17 +116,10 @@ class GameState {
     }
   }
 
-  void AIaction() {
-    //AIが行くか退くか決める
-    AIjudges();
-    //campに変える人たちは帰る
-    backToCamp(camper);
-    //場所がおかしいけどとりあえずここで
-  }
-
   void newTurn() {
-    textmessage.add("Round$roundNumber:Turn$turnNumber\n");
-
+    AIaction();
+    tellBackToCamp(camper);
+    backToCamp(camper);
     if (competitorsInruins.isEmpty) {
       RoundOverFlag = true;
     }
@@ -136,6 +129,11 @@ class GameState {
       cardsOnDeck.removeAt(0);
       //場札の末尾に追加
       cardsOnBoard.add(_temp);
+      //新しい場札についてのメッセージ
+      tellNewCard(_temp);
+      //ラウンドとターンの番号についてのメッセージ
+      textmessage.add(
+          "===============Round$roundNumber:Turn$turnNumber===============");
       //めくれたカードにしたがって処理
       _encounter(_temp);
     }
@@ -212,6 +210,30 @@ class GameState {
     roundNumber++;
     init();
   }
+
+  void tellBackToCamp(List<Players> camper) {
+    for (var _players in camper) {
+      textmessage.add("${_players.playerName}はキャンプに戻った");
+    }
+  }
+
+  void tellNewCard(String card) {
+    if (card.contains("diamond")) {
+      textmessage.add("ダイアモンドを${card.replaceAll("diamond_", "")}個発見した");
+    } else if (card.contains("treasure")) {
+      textmessage.add("宝物を発見した");
+    } else {
+      if (card.contains("bat"))
+        textmessage.add("こうもりの群れに襲われた");
+      else if (card.contains("fire"))
+        textmessage.add("たいまつが服に引火した");
+      else if (card.contains("mummy"))
+        textmessage.add("ミイラに襲われた");
+      else if (card.contains("snake"))
+        textmessage.add("大蛇に襲われた");
+      else if (card.contains("spider")) textmessage.add("クモの群れに襲われた");
+    }
+  }
 }
 
 class Players {
@@ -231,7 +253,7 @@ class Players {
 
   String decide() {
     int _num = Random().nextInt(100);
-    int _goProbability = 50;
+    int _goProbability = 90;
     //80%の確率で
     if (_num % (100 / (100 - _goProbability)) != 0) {
       return "go";
