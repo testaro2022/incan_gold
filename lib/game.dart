@@ -109,7 +109,7 @@ class GameState {
   void AIaction() {
     //AIが行くか退くか決める
     for (var who in competitorsInruins) {
-      if (who != Alice && who.decide() == "back") {
+      if (who != Alice && who.decide(this) == "back") {
         camper.add(who);
         competitorsInruins.remove(who);
       }
@@ -251,14 +251,31 @@ class Players {
     diamonds = 0;
   }
 
-  String decide() {
-    int _num = Random().nextInt(100);
-    int _goProbability = 90;
-    //80%の確率で
-    if (_num % (100 / (100 - _goProbability)) != 0) {
+  String decide(GameState gs) {
+    double _randomNum = (100+Random().nextInt(30)-Random().nextInt(30))/100;//0.7~1.3の間で変動
+    int _secondDangerCardNum = 0;//引いたら負けるカードの枚数
+
+    for(var i in gs.cardsOnBoard){
+      if(i.contains("danger")){
+        for(var j in gs.cardsOnDeck){
+          if(i==j)_secondDangerCardNum++;
+        }
+      }
+    }
+
+    //このラウンド負ける確率＝引いたらいけないカードの数/残りの枚数
+    double _defeatProbability = _secondDangerCardNum/gs.cardsOnDeck.length * 100;
+
+    if (_defeatProbability*_randomNum < 22.5) {
       return "go";
     } else {
       return "back";
     }
+
+    // if (_num % (100 / (100 - _goProbability)) != 0) {
+    //   return "go";
+    // } else {
+    //   return "back";
+    // }
   }
 }
