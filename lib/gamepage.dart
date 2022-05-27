@@ -260,7 +260,8 @@ class _GamePageState extends State<GamePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("your score: ${_gameState.score}"),
+                        for (var i in _gameState.competitors)
+                        Text("${i.playerName} score: ${i.score}",style: TextStyle(fontSize: 24),),
                         SizedBox(
                           width: 200,
                           height: 80,
