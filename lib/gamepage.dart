@@ -15,6 +15,25 @@ class _GamePageState extends State<GamePage> {
   final int MAX_ROUND_NUM = 5;
   final int PLAYERS_NUM = 3;
   GameState _gameState = GameState();
+  bool _visibleAlice = false;
+  bool _visibleBob = false;
+  bool _visibleChalie = false;
+  bool _visibleCard = false;
+
+  Widget tellAIAction(Players AI) {
+    if (_gameState.competitorsInruins.contains(AI)) {
+      return Text("${AI.playerName}は次のターン遺跡を探検するようです",
+          style: TextStyle(fontSize: 24));
+    } else {
+      if (_gameState.camper.contains(AI)) {
+        return Text("${AI.playerName}は次のターンキャンプに帰るようです",
+            style: TextStyle(fontSize: 24));
+      } else {
+        return Text("${AI.playerName}はキャンプにいます。",
+            style: TextStyle(fontSize: 24));
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -33,10 +52,7 @@ class _GamePageState extends State<GamePage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   // 最上段:余白
-                  SizedBox(
-                    width: 0,
-                    height: 20,
-                  ),
+                  const SizedBox(height: 20),
                   //上段:ROUND数とplayerスコアを置く
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -163,94 +179,200 @@ class _GamePageState extends State<GamePage> {
                   ),
                   //下段:テキストメッセージ+進むか引くかのボタン
                   Row(
-                    // crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      //余白
-                      SizedBox(
-                        width: 10,
-                        height: 0,
-                      ),
-                      //テキストメッセージ
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: SingleChildScrollView(
-                            child: Container(
-                              child: Column(
-                                children: [
-                                  for (var text
-                                      in _gameState.textmessage.reversed)
-                                    Text(text),
-                                  Text(
-                                      "===============GAME START==============="),
-                                ],
-                              ),
-                            ),
-                          ),
-                          // child: Column(
-                          //   children: [
-                          //     for (var text in _gameState.textmessage)
-                          //       Text(text),
-                          //   ],
-                          // ),
-                          color: Color(0xFFD3DEF1),
-                          height: 100.0,
-                        ),
-                      ),
-                      //余白
-                      SizedBox(
-                        width: 10,
-                        height: 0,
-                      ),
-                      //キャンプに戻るボタン
-                      SizedBox(
-                        width: 100,
-                        height: 110,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _gameState.AliceBackToCamp();
-                              _gameState.AIaction();
-                              _gameState.newTurn();
-                            });
-                          },
-                          child: Text(
-                            "キャンプ\nに戻る",
-                          ),
-                        ),
-                      ),
-                      //余白
-                      SizedBox(
-                        width: 10,
-                        height: 0,
-                      ),
                       // 遺跡に進むボタン
                       SizedBox(
-                        width: 100,
+                        width: 500,
                         height: 110,
                         child: ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              _gameState.AIaction();
-                              _gameState.newTurn();
+                              _visibleAlice = true;
                             });
                           },
-                          child: Text((_gameState.competitorsInruins
-                                  .contains(_gameState.Alice))
-                              ? "遺跡を\n探検する"
-                              : "次のターンへ"),
+                          child: Text("次のターンへ"),
                         ),
                       ),
                       //余白
-                      SizedBox(
-                        width: 20,
-                        height: 0,
-                      )
+                      SizedBox(width: 20)
                     ],
                   )
                 ],
               ),
+              //ALiceが遺跡にいるとき
+              Visibility(
+                visible: _visibleAlice &&
+                    _gameState.competitorsInruins.contains(_gameState.Alice),
+                child: Container(
+                    color: Colors.red.withOpacity(0.8),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Alice(あなた)は次のターンどうする？",
+                            style: TextStyle(fontSize: 24)),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("キャンセル"),
+                            onPressed: () {
+                              setState(() {
+                                _visibleAlice = false;
+                              });
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("遺跡を探検する"),
+                            onPressed: () {
+                              // _gameState.newTurn();
+                              setState(() {
+                                _visibleBob = true;
+                                _visibleAlice = false;
+                                _gameState.AIaction();
+                              });
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("キャンプに戻る"),
+                            onPressed: () {
+                              setState(() {
+                                _gameState.AliceBackToCamp();
+                                _visibleBob = true;
+                                _visibleAlice = false;
+                                _gameState.AIaction();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+              //Aliceがキャンプにいるとき
+              Visibility(
+                visible: _visibleAlice &&
+                    !(_gameState.competitorsInruins.contains(_gameState.Alice)),
+                child: Container(
+                    color: Colors.red.withOpacity(0.8),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Alice(あなた)はキャンプに帰っています。",
+                            style: TextStyle(fontSize: 24)),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("次へ"),
+                            onPressed: () {
+                              setState(() {
+                                _visibleBob = true;
+                                _visibleAlice = false;
+                                _gameState.AIaction();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+              //Bobのターン
+              Visibility(
+                visible: _visibleBob,
+                child: Container(
+                    color: Colors.red.withOpacity(0.5),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        tellAIAction(_gameState.Bob),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("次へ"),
+                            onPressed: () {
+                              setState(() {
+                                _visibleBob = false;
+                                _visibleChalie = true;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+              //Chalieのターン
+              Visibility(
+                visible: _visibleChalie,
+                child: Container(
+                    color: Colors.red.withOpacity(0.5),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        tellAIAction(_gameState.Charlie),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("次へ"),
+                            onPressed: () {
+                              setState(() {
+                                _visibleCard = true;
+                                _visibleChalie = false;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+              //カードの解説
+              Visibility(
+                visible: _visibleCard,
+                child: Container(
+                    color: Colors.red.withOpacity(0.3),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                            (_gameState.competitorsInruins.isEmpty)
+                                ? "探検隊は全員帰りました"
+                                : (_gameState.Troubles.contains(_gameState
+                                        .cardsOnDeck[0]
+                                        .replaceFirst("danger_", "")))
+                                    ? "次のカードは${_gameState.cardsOnDeck[0]}でした。2回目の障害カードなので探検はここで終わりです。"
+                                    : "\n次のカードは${_gameState.cardsOnDeck[0]}でした。探検隊は洞窟の奥へと進んだ......",
+                            style: TextStyle(fontSize: 24)),
+                        SizedBox(
+                          width: 200,
+                          height: 80,
+                          child: ElevatedButton(
+                            child: Text("確認"),
+                            onPressed: () {
+                              setState(() {
+                                _visibleCard = false;
+                                _gameState.newTurn();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+              //ゲーム終了時に出る
               Visibility(
                 visible:
                     _gameState.roundNumber == 5 && _gameState.RoundOverFlag,
@@ -279,14 +401,16 @@ class _GamePageState extends State<GamePage> {
                       ],
                     )),
               ),
+              //Round終了時に出る
               Visibility(
                 visible: _gameState.RoundOverFlag && _gameState.roundNumber < 5,
                 child: Container(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withOpacity(0.7),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("ラウンド${_gameState.roundNumber}が終了しました"),
+                      Text("ラウンド${_gameState.roundNumber}が終了しました",
+                          style: TextStyle(fontSize: 24)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

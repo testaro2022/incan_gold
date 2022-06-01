@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:io';
 
 List<String> cardList = [
   //treasureが5枚,dangerが5種3枚ずつ,合計30枚
@@ -109,15 +110,16 @@ class GameState {
   void AIaction() {
     //AIが行くか退くか決める
     for (var who in competitorsInruins) {
-      if (who != Alice && who.decide(this) == "back") {
+      who.will = who.decide(this);
+      if (who != Alice && who.will == "back") {
         camper.add(who);
         competitorsInruins.remove(who);
       }
     }
   }
 
-  void newTurn() {
-    AIaction();
+  void newTurn() async {
+    // AIaction();
     tellBackToCamp(camper);
     backToCamp(camper);
     if (competitorsInruins.isEmpty) {
@@ -242,6 +244,7 @@ class Players {
   int diamondsIncamp = 0;
   int treasureIncamp = 0;
   int score = 0;
+  String will = "";
 
   Players(String name) {
     this.playerName = name;
@@ -252,30 +255,26 @@ class Players {
   }
 
   String decide(GameState gs) {
-    double _randomNum = (100+Random().nextInt(30)-Random().nextInt(30))/100;//0.7~1.3の間で変動
-    int _secondDangerCardNum = 0;//引いたら負けるカードの枚数
+    double _randomNum = (100 + Random().nextInt(30) - Random().nextInt(30)) /
+        100; //0.7~1.3の間で変動
+    int _secondDangerCardNum = 0; //引いたら負けるカードの枚数
 
-    for(var i in gs.cardsOnBoard){
-      if(i.contains("danger")){
-        for(var j in gs.cardsOnDeck){
-          if(i==j)_secondDangerCardNum++;
+    for (var i in gs.cardsOnBoard) {
+      if (i.contains("danger")) {
+        for (var j in gs.cardsOnDeck) {
+          if (i == j) _secondDangerCardNum++;
         }
       }
     }
 
     //このラウンド負ける確率＝引いたらいけないカードの数/残りの枚数
-    double _defeatProbability = _secondDangerCardNum/gs.cardsOnDeck.length * 100;
+    double _defeatProbability =
+        _secondDangerCardNum / gs.cardsOnDeck.length * 100;
 
-    if (_defeatProbability*_randomNum < 22.5) {
+    if (_defeatProbability * _randomNum < 10) {
       return "go";
     } else {
       return "back";
     }
-
-    // if (_num % (100 / (100 - _goProbability)) != 0) {
-    //   return "go";
-    // } else {
-    //   return "back";
-    // }
   }
 }
