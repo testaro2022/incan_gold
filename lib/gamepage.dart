@@ -22,17 +22,57 @@ class _GamePageState extends State<GamePage> {
 
   Widget tellAIAction(Players AI) {
     if (_gameState.competitorsInruins.contains(AI)) {
-      return Text("${AI.playerName}は次のターン遺跡を探検するようです",
+      return Text("${AI.playerName}(COM)は次のターン遺跡を探検するようです",
           style: TextStyle(fontSize: 24));
     } else {
       if (_gameState.camper.contains(AI)) {
-        return Text("${AI.playerName}は次のターンキャンプに帰るようです",
+        return Text("${AI.playerName}(COM)は次のターンキャンプに帰るようです",
             style: TextStyle(fontSize: 24));
       } else {
-        return Text("${AI.playerName}はキャンプにいます。",
+        return Text("${AI.playerName}(COM)はキャンプにいます。",
             style: TextStyle(fontSize: 24));
       }
     }
+  }
+
+  Widget tellNextCard() {
+    String _text = "";
+    if (_gameState.competitorsInruins.isEmpty) {
+      // _text = "探検隊は全員帰りました";
+      return Text("探検隊は全員帰りました", style: TextStyle(fontSize: 24));
+    } else {
+      switch (_gameState.cardsOnDeck[0]) {
+        case "danger_spider":
+          _text = "次のカードは障害カード「クモ」でした\n";
+          break;
+        case "danger_mummy":
+          _text = "次のカードは障害カード「ミイラ」でした\n";
+          break;
+        case "danger_fire":
+          _text = "次のカードは障害カード「火」でした\n";
+          break;
+        case "danger_snake":
+          _text = "次のカードは障害カード「ヘビ」でした\n";
+          break;
+        case "danger_bat":
+          _text = "次のカードは障害カード「ヘビ」でした\n";
+          break;
+        case "treasure":
+          _text = "次のカードは宝物カードでした\n";
+          break;
+        default:
+          _text =
+              "次のカードはダイヤカード「${_gameState.cardsOnDeck[0].replaceAll("diamond_", "")}」でした\n";
+          break;
+      }
+      if (_gameState.Troubles.contains(
+          _gameState.cardsOnDeck[0].replaceFirst("danger_", ""))) {
+        _text += "2回目の障害カードなので探検はここで終わりです。";
+      } else {
+        _text += "探検隊は洞窟の奥へと進んだ......";
+      }
+    }
+    return Text(_text, style: TextStyle(fontSize: 24));
   }
 
   @override
@@ -171,13 +211,10 @@ class _GamePageState extends State<GamePage> {
                               child: Image.asset('images/card_${_card}.png'),
                             )),
                       //ボタン下部固定のためのダミーsizedbox
-                      SizedBox(
-                        width: 0,
-                        height: 67,
-                      )
+                      const SizedBox(height: 67)
                     ],
                   ),
-                  //下段:テキストメッセージ+進むか引くかのボタン
+                  //進むか引くかのボタン
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -195,7 +232,7 @@ class _GamePageState extends State<GamePage> {
                         ),
                       ),
                       //余白
-                      SizedBox(width: 20)
+                      const SizedBox(width: 20)
                     ],
                   )
                 ],
@@ -212,47 +249,52 @@ class _GamePageState extends State<GamePage> {
                       children: [
                         Text("Alice(あなた)は次のターンどうする？",
                             style: TextStyle(fontSize: 24)),
-                        SizedBox(
-                          width: 200,
-                          height: 80,
-                          child: ElevatedButton(
-                            child: Text("キャンセル"),
-                            onPressed: () {
-                              setState(() {
-                                _visibleAlice = false;
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          width: 200,
-                          height: 80,
-                          child: ElevatedButton(
-                            child: Text("遺跡を探検する"),
-                            onPressed: () {
-                              // _gameState.newTurn();
-                              setState(() {
-                                _visibleBob = true;
-                                _visibleAlice = false;
-                                _gameState.AIaction();
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          width: 200,
-                          height: 80,
-                          child: ElevatedButton(
-                            child: Text("キャンプに戻る"),
-                            onPressed: () {
-                              setState(() {
-                                _gameState.AliceBackToCamp();
-                                _visibleBob = true;
-                                _visibleAlice = false;
-                                _gameState.AIaction();
-                              });
-                            },
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 200,
+                              height: 80,
+                              child: ElevatedButton(
+                                child: Text("キャンセル"),
+                                onPressed: () {
+                                  setState(() {
+                                    _visibleAlice = false;
+                                  });
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              width: 200,
+                              height: 80,
+                              child: ElevatedButton(
+                                child: Text("遺跡を探検する"),
+                                onPressed: () {
+                                  // _gameState.newTurn();
+                                  setState(() {
+                                    _visibleBob = true;
+                                    _visibleAlice = false;
+                                    _gameState.AIaction();
+                                  });
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              width: 200,
+                              height: 80,
+                              child: ElevatedButton(
+                                child: Text("キャンプに戻る"),
+                                onPressed: () {
+                                  setState(() {
+                                    _gameState.AliceBackToCamp();
+                                    _visibleBob = true;
+                                    _visibleAlice = false;
+                                    _gameState.AIaction();
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     )),
@@ -338,7 +380,7 @@ class _GamePageState extends State<GamePage> {
                       ],
                     )),
               ),
-              //カードの解説
+              //次のカードの解説
               Visibility(
                 visible: _visibleCard,
                 child: Container(
@@ -347,15 +389,7 @@ class _GamePageState extends State<GamePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                            (_gameState.competitorsInruins.isEmpty)
-                                ? "探検隊は全員帰りました"
-                                : (_gameState.Troubles.contains(_gameState
-                                        .cardsOnDeck[0]
-                                        .replaceFirst("danger_", "")))
-                                    ? "次のカードは${_gameState.cardsOnDeck[0]}でした。2回目の障害カードなので探検はここで終わりです。"
-                                    : "\n次のカードは${_gameState.cardsOnDeck[0]}でした。探検隊は洞窟の奥へと進んだ......",
-                            style: TextStyle(fontSize: 24)),
+                        tellNextCard(),
                         SizedBox(
                           width: 200,
                           height: 80,
@@ -382,7 +416,12 @@ class _GamePageState extends State<GamePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("your score: ${_gameState.score}"),
+                        Text("Alice score: ${_gameState.Alice.score}",
+                            style: TextStyle(fontSize: 24)),
+                        Text("Bob score: ${_gameState.Bob.score}",
+                            style: TextStyle(fontSize: 24)),
+                        Text("Chalie score: ${_gameState.Charlie.score}",
+                            style: TextStyle(fontSize: 24)),
                         SizedBox(
                           width: 200,
                           height: 80,

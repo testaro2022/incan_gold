@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:io';
 
 List<String> cardList = [
   //treasureが5枚,dangerが5種3枚ずつ,合計30枚
@@ -57,7 +56,6 @@ class GameState {
   bool troubleFlag = false;
   int score = 0;
   int playersNum = 3;
-  List<String> textmessage = [];
 
   Players Alice = Players("Alice");
   Players Bob = Players("Bob");
@@ -97,8 +95,6 @@ class GameState {
     cardsOnDeck.removeAt(0);
     //場札の末尾に追加
     cardsOnBoard.add(_temp);
-    tellNewCard(_temp);
-    textmessage.add("===============Round$roundNumber:Turn0===============");
     _encounter(_temp);
   }
 
@@ -120,7 +116,6 @@ class GameState {
 
   void newTurn() async {
     // AIaction();
-    tellBackToCamp(camper);
     backToCamp(camper);
     if (competitorsInruins.isEmpty) {
       RoundOverFlag = true;
@@ -131,11 +126,6 @@ class GameState {
       cardsOnDeck.removeAt(0);
       //場札の末尾に追加
       cardsOnBoard.add(_temp);
-      //新しい場札についてのメッセージ
-      tellNewCard(_temp);
-      //ラウンドとターンの番号についてのメッセージ
-      textmessage.add(
-          "===============Round$roundNumber:Turn$turnNumber===============");
       //めくれたカードにしたがって処理
       _encounter(_temp);
     }
@@ -193,12 +183,9 @@ class GameState {
       diamondsLeft = 0;
     }
     camper.clear();
-    //ほんとは余ったダイヤとかの処理する
   }
 
   void reroll() {
-    // print(cardsOnBoard);
-    // print(cardsOnDeck..sort());
     //障害カードを抜いてサイドカードと入れ替え
     if (troubleFlag) {
       cardsOnBoard.removeAt(cardsOnBoard.length - 1);
@@ -211,30 +198,6 @@ class GameState {
     cardsOnDeck.shuffle();
     roundNumber++;
     init();
-  }
-
-  void tellBackToCamp(List<Players> camper) {
-    for (var _players in camper) {
-      textmessage.add("${_players.playerName}はキャンプに戻った");
-    }
-  }
-
-  void tellNewCard(String card) {
-    if (card.contains("diamond")) {
-      textmessage.add("ダイアモンドを${card.replaceAll("diamond_", "")}個発見した");
-    } else if (card.contains("treasure")) {
-      textmessage.add("宝物を発見した");
-    } else {
-      if (card.contains("bat"))
-        textmessage.add("こうもりの群れに襲われた");
-      else if (card.contains("fire"))
-        textmessage.add("たいまつが服に引火した");
-      else if (card.contains("mummy"))
-        textmessage.add("ミイラに襲われた");
-      else if (card.contains("snake"))
-        textmessage.add("大蛇に襲われた");
-      else if (card.contains("spider")) textmessage.add("クモの群れに襲われた");
-    }
   }
 }
 
