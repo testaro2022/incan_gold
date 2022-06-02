@@ -55,7 +55,7 @@ class _GamePageState extends State<GamePage> {
           _text = "次のカードは障害カード「ヘビ」でした\n";
           break;
         case "danger_bat":
-          _text = "次のカードは障害カード「ヘビ」でした\n";
+          _text = "次のカードは障害カード「コウモリ」でした\n";
           break;
         case "treasure":
           _text = "次のカードは宝物カードでした\n";
